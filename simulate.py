@@ -101,18 +101,20 @@ if __name__ == '__main__':
 
     import sys
     import argparse
+    from tqdm import tqdm
 
     systems = get_systems()
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--match-format', required=True, type=str,
-                        help='Any one of {}'.format(list(systems.keys())))
+                        help='Any one of {} or "all" to run all of them.'.format(
+                            list(systems.keys())))
     parser.add_argument('--bonus', required=True, type=float)
     parser.add_argument('--malus', required=True, type=float)
     parser.add_argument('--num-trials', default=int(1e4), type=int)
     args = parser.parse_args()
 
-    if args.match_format not in systems:
+    if args.match_format not in systems and args.match_format != 'all':
 
         print('Match format {} is unknown. Please choose from:'.format(
             args.match_format))
@@ -130,7 +132,11 @@ if __name__ == '__main__':
 
         results = list()
 
-        for system_name, fn in systems.items():
+        pbar = tqdm(systems.items())
+
+        for system_name, fn in pbar:
+
+            pbar.set_description('Calculating {}'.format(system_name))
 
             cur_results = run_trials(fn, spw_1, spw_2, args.num_trials)
             cur_results['format'] = system_name
