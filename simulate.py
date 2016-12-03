@@ -45,11 +45,18 @@ def get_systems():
         set_types.play_fast_four_set, [spw_1, spw_2], 3,
         final_set_fun=set_types.super_tb)
 
+    iptl_bo3 = lambda spw_1, spw_2: set_types.best_of(
+        set_types.play_iptl_set, [spw_1, spw_2], 3)
+
+    iptl_bo5 = lambda spw_1, spw_2: set_types.best_of(
+        set_types.play_iptl_set, [spw_1, spw_2], 5)
+
     all_systems = {'atp_wimbledon': system_4, 'wta_wimbledon': system_5,
                    'atp_us_open': system_6, 'wta_us_open': system_7,
                    'mixed_doubles_fo': system_8, 'doubles': system_9,
                    'fast_four_singles': fast_four_singles,
-                   'fast_four_doubles': fast_four_doubles}
+                   'fast_four_doubles': fast_four_doubles,
+                   'iptl_bo3': iptl_bo3, 'iptl_bo5': iptl_bo5}
 
     return all_systems
 
@@ -68,13 +75,13 @@ def run_trials(match_fn, spw_1, spw_2, num_trials=int(1e4)):
 
             match_result = match_fn(spw_1, spw_2)
             cur_results['better_won'] = (match_result.final_score[0] >
-                                        match_result.final_score[1])
+                                         match_result.final_score[1])
 
         else:
 
             match_result = match_fn(spw_2, spw_1)
             cur_results['better_won'] = (match_result.final_score[0] <
-                                        match_result.final_score[1])
+                                         match_result.final_score[1])
 
         cur_results.update(
             {'bonus': spw_1 + spw_2, 'malus': spw_1 - spw_2, 'total_points':

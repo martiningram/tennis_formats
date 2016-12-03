@@ -107,6 +107,56 @@ def play_standard_set(p_serve_wins, has_tiebreak=True, service_game_ad=True):
                       num_changes_ends=num_changes_ends)
 
 
+def play_iptl_set(p_serve_wins, super_shoot_out=False):
+
+    points_played = 0
+    num_changes_ends = 0
+
+    cur_score = np.zeros(2, dtype=np.int)
+
+    while (not any([x == 6 for x in cur_score])
+           or np.abs(cur_score[0] - cur_score[1]) < 2):
+
+        cur_server = np.sum(cur_score) % 2
+
+        if np.sum(cur_score) % 2 == 1:
+            num_changes_ends += 1
+
+        if all([x == 5 for x in cur_score]):
+
+            min_points = 10 if super_shoot_out else 7
+
+            tb_outcome = play_tiebreak(
+                [p_serve_wins[cur_server], p_serve_wins[1 - cur_server]],
+                min_points=min_points, is_ad=False)
+
+            num_changes_ends += np.sum(tb_outcome) // 6
+
+            tb_winner = (cur_server if np.argmax(tb_outcome) == 0 else 1 -
+                         cur_server)
+
+            points_played += np.sum(tb_outcome)
+
+            cur_score[tb_winner] += 1
+
+            break
+
+        game_result = play_service_game(p_serve_wins[cur_server], is_ad=False)
+
+        points_played += np.sum(game_result)
+
+        if np.argmax(game_result) == 0:
+
+            cur_score[cur_server] += 1
+
+        else:
+
+            cur_score[1 - cur_server] += 1
+
+    return SetResults(final_score=cur_score, points_played=points_played,
+                      num_changes_ends=num_changes_ends)
+
+
 def play_fast_four_set(p_serve_wins):
 
     points_played = 0
