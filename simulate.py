@@ -28,10 +28,6 @@ def get_systems():
         set_types.play_standard_set, [spw_1, spw_2],
         3, final_set_fun=final_set_with_tb)
 
-    system_8 = lambda spw_1, spw_2: set_types.best_of(
-        set_types.play_standard_set, [spw_1, spw_2],
-        3, final_set_fun=set_types.super_tb)
-
     system_9 = lambda spw_1, spw_2: set_types.best_of(
         lambda win_probs:
         set_types.play_standard_set(win_probs, service_game_ad=False),
@@ -45,16 +41,15 @@ def get_systems():
         set_types.play_fast_four_set, [spw_1, spw_2], 3,
         final_set_fun=set_types.super_tb)
 
-    iptl_bo3 = lambda spw_1, spw_2: set_types.best_of(
+    iptl_bo3 = lambda spw_1, spw_2: set_types.iptl_best_of(
         set_types.play_iptl_set, [spw_1, spw_2], 3)
 
-    iptl_bo5 = lambda spw_1, spw_2: set_types.best_of(
+    iptl_bo5 = lambda spw_1, spw_2: set_types.iptl_best_of(
         set_types.play_iptl_set, [spw_1, spw_2], 5)
 
     all_systems = {'atp_wimbledon': system_4, 'wta_wimbledon': system_5,
                    'atp_us_open': system_6, 'wta_us_open': system_7,
-                   'mixed_doubles_fo': system_8, 'doubles': system_9,
-                   'fast_four_singles': fast_four_singles,
+                   'doubles': system_9, 'fast_four_singles': fast_four_singles,
                    'fast_four_doubles': fast_four_doubles,
                    'iptl_bo3': iptl_bo3, 'iptl_bo5': iptl_bo5}
 

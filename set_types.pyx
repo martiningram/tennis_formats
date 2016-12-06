@@ -8,7 +8,7 @@ SetResults = namedtuple("SetResults", ['final_score', 'points_played',
 
 MatchResults = namedtuple("MatchResults", ['set_scores', 'total_points',
                                            'total_changes_ends', 'final_score',
-                                           'num_set_changes'])
+                                           'num_set_changes', 'first_servers'])
 
 
 def best_of(set_win_fun, p_serve_wins, best_of, final_set_fun=None):
@@ -21,6 +21,7 @@ def best_of(set_win_fun, p_serve_wins, best_of, final_set_fun=None):
     cur_server = 0
 
     set_scores = list()
+    set_servers = list()
 
     while (np.abs(cur_score[0] - cur_score[1]) <=
            best_of - np.sum(cur_score)):
@@ -43,6 +44,7 @@ def best_of(set_win_fun, p_serve_wins, best_of, final_set_fun=None):
         total_points += set_results.points_played
         total_changes_ends += set_results.num_changes_ends
         set_scores.append(set_results)
+        set_servers.append(cur_server)
 
         # Update state
         set_score = set_results.final_score
@@ -55,7 +57,58 @@ def best_of(set_win_fun, p_serve_wins, best_of, final_set_fun=None):
     return MatchResults(final_score=cur_score, set_scores=set_scores,
                         total_points=total_points,
                         total_changes_ends=total_changes_ends,
-                        num_set_changes=np.sum(cur_score) - 1)
+                        num_set_changes=np.sum(cur_score) - 1,
+                        first_servers=set_servers)
+
+
+def iptl_best_of(set_win_fun, p_serve_wins, best_of, final_set_fun=None):
+
+    cur_score = np.zeros(2, dtype=np.int)
+
+    total_points = 0
+    total_changes_ends = 0
+
+    cur_server = 0
+
+    set_scores = list()
+    set_servers = list()
+
+    while len(set_scores) < best_of:
+
+        if len(set_scores) == (best_of - 1):
+
+            # We are in the final set:
+            final_set_fun = (set_win_fun if final_set_fun is None else
+                             final_set_fun)
+
+            set_results = final_set_fun(
+                [p_serve_wins[cur_server], p_serve_wins[1 - cur_server]])
+
+        else:
+
+            set_results = set_win_fun(
+                [p_serve_wins[cur_server], p_serve_wins[1 - cur_server]])
+
+        # Bookkeeping
+        total_points += set_results.points_played
+        total_changes_ends += set_results.num_changes_ends
+        set_scores.append(set_results)
+        set_servers.append(cur_server)
+
+        # Update state
+        set_score = set_results.final_score
+        winner = cur_server if np.argmax(set_score) == 0 else 1 - cur_server
+        cur_score[winner] += set_score[np.argmax(set_score)]
+        cur_score[1 - winner] += set_score[1 - np.argmax(set_score)]
+
+        cur_server = (cur_server if np.sum(set_score) % 2 == 0 else
+                      1 - cur_server)
+
+    return MatchResults(final_score=cur_score, set_scores=set_scores,
+                        total_points=total_points,
+                        total_changes_ends=total_changes_ends,
+                        num_set_changes=len(set_scores) - 1,
+                        first_servers=set_servers)
 
 
 def play_standard_set(p_serve_wins, has_tiebreak=True, service_game_ad=True):
