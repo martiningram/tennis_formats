@@ -4,6 +4,23 @@ import pandas as pd
 import set_types
 
 
+def produce_string_score(match_results):
+
+    # Reorient score
+    winner = np.argmax(match_results.final_score)
+    set_scores = [x.final_score.tolist() for x in match_results.set_scores]
+
+    for i in range(len(set_scores)):
+
+        cur_score = set_scores[i]
+        cur_server = match_results.first_servers[i]
+
+        if cur_server != winner:
+            set_scores[i] = list(reversed(set_scores[i]))
+
+    return ''.join(['{}-{} '.format(x[0], x[1]) for x in set_scores]).strip()
+
+
 def get_systems():
 
     final_set_no_tb = lambda win_probs: set_types.play_standard_set(
@@ -82,7 +99,8 @@ def run_trials(match_fn, spw_1, spw_2, num_trials=int(1e4)):
             {'bonus': spw_1 + spw_2, 'malus': spw_1 - spw_2, 'total_points':
             match_result.total_points, 'total_changes_of_ends':
             match_result.total_changes_ends, 'total_set_changes':
-             match_result.num_set_changes, 'spw_1': spw_1, 'spw_2': spw_2})
+             match_result.num_set_changes, 'spw_1': spw_1, 'spw_2': spw_2,
+             'set_scores': produce_string_score(match_result)})
 
         results.append(cur_results)
 
