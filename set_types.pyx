@@ -111,14 +111,15 @@ def iptl_best_of(set_win_fun, p_serve_wins, best_of, final_set_fun=None):
                         first_servers=set_servers)
 
 
-def play_standard_set(p_serve_wins, has_tiebreak=True, service_game_ad=True):
+def play_standard_set(p_serve_wins, has_tiebreak=True, service_game_ad=True,
+                      num_games_to_win=6, tiebreak_fun=None):
 
     points_played = 0
     num_changes_ends = 0
 
     cur_score = np.zeros(2, dtype=np.int)
 
-    while (not any([x >= 6 for x in cur_score])
+    while (not any([x >= num_games_to_win for x in cur_score])
            or np.abs(cur_score[0] - cur_score[1]) < 2):
 
         cur_server = np.sum(cur_score) % 2
@@ -126,11 +127,17 @@ def play_standard_set(p_serve_wins, has_tiebreak=True, service_game_ad=True):
         if np.sum(cur_score) % 2 == 1:
             num_changes_ends += 1
 
-        if all([x == 6 for x in cur_score]) and has_tiebreak:
+        if all([x == num_games_to_win for x in cur_score]) and has_tiebreak:
 
-            tb_outcome = play_tiebreak(
-                [p_serve_wins[cur_server], p_serve_wins[1 - cur_server]],
-                min_points=7, is_ad=True)
+            if tiebreak_fun is None:
+                tb_outcome = play_tiebreak(
+                    [p_serve_wins[cur_server], p_serve_wins[1 - cur_server]],
+                    min_points=7, is_ad=True)
+
+            else:
+
+                tb_outcome = tiebreak_fun(
+                    [p_serve_wins[cur_server], p_serve_wins[1 - cur_server]])
 
             num_changes_ends += np.sum(tb_outcome) // 6
 

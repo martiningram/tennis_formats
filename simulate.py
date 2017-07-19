@@ -2,6 +2,8 @@ import pyximport; pyximport.install()
 import numpy as np
 import pandas as pd
 import set_types
+import monte_carlo
+from tqdm import tqdm
 
 
 def produce_string_score(match_results):
@@ -12,7 +14,6 @@ def produce_string_score(match_results):
 
     for i in range(len(set_scores)):
 
-        cur_score = set_scores[i]
         cur_server = match_results.first_servers[i]
 
         if cur_server != winner:
@@ -51,6 +52,42 @@ def get_systems():
         [spw_1, spw_2],
         3, final_set_fun=set_types.super_tb)
 
+    bo3_no_ad = lambda spw_1, spw_2: set_types.best_of(
+        lambda win_probs:
+        set_types.play_standard_set(win_probs, service_game_ad=False),
+        [spw_1, spw_2], 3,
+        final_set_fun=lambda win_probs: set_types.play_standard_set(
+            win_probs, service_game_ad=False, has_tiebreak=False))
+
+    sets_four_games = lambda spw_1, spw_2: set_types.best_of(
+            lambda win_probs: set_types.play_standard_set(
+                win_probs, num_games_to_win=4), [spw_1, spw_2], 3,
+            final_set_fun=lambda win_probs: set_types.play_standard_set(
+                win_probs, has_tiebreak=False, num_games_to_win=4))
+
+    sets_five_games = lambda spw_1, spw_2: set_types.best_of(
+            lambda win_probs: set_types.play_standard_set(
+                win_probs, num_games_to_win=5), [spw_1, spw_2], 3,
+            final_set_fun=lambda win_probs: set_types.play_standard_set(
+                win_probs, has_tiebreak=False, num_games_to_win=5))
+
+    iptl_tiebreak = lambda win_probs: monte_carlo.play_tiebreak(
+        win_probs, is_ad=False)
+
+    fast_four_tb = lambda spw_1, spw_2: set_types.best_of(
+        lambda win_probs: set_types.play_standard_set(
+            win_probs, tiebreak_fun=monte_carlo.play_fast_four_tiebreak),
+        [spw_1, spw_2], 3, final_set_fun=lambda win_probs:
+        set_types.play_standard_set(
+                win_probs, has_tiebreak=False))
+
+    iptl_tb = lambda spw_1, spw_2: set_types.best_of(
+        lambda win_probs: set_types.play_standard_set(
+            win_probs, tiebreak_fun=iptl_tiebreak),
+        [spw_1, spw_2], 3, final_set_fun=lambda win_probs:
+        set_types.play_standard_set(
+                win_probs, has_tiebreak=False))
+
     fast_four_singles = lambda spw_1, spw_2: set_types.best_of(
         set_types.play_fast_four_set, [spw_1, spw_2], 3)
 
@@ -64,11 +101,20 @@ def get_systems():
     iptl_bo5 = lambda spw_1, spw_2: set_types.iptl_best_of(
         set_types.play_iptl_set, [spw_1, spw_2], 5)
 
-    all_systems = {'atp_wimbledon': system_4, 'wta_wimbledon': system_5,
-                   'atp_us_open': system_6, 'wta_us_open': system_7,
-                   'doubles': system_9, 'fast_four_singles': fast_four_singles,
+    all_systems = {'atp_wimbledon': system_4,
+                   'wta_wimbledon': system_5,
+                   'atp_us_open': system_6,
+                   'wta_us_open': system_7,
+                   'doubles': system_9,
+                   'fast_four_singles': fast_four_singles,
                    'fast_four_doubles': fast_four_doubles,
-                   'iptl_bo3': iptl_bo3, 'iptl_bo5': iptl_bo5}
+                   'iptl_bo3': iptl_bo3,
+                   'iptl_bo5': iptl_bo5,
+                   'bo3_no_ad_games': bo3_no_ad,
+                   'sets_four_games': sets_four_games,
+                   'sets_five_games': sets_five_games,
+                   'fast_four_tb': fast_four_tb,
+                   'iptl_tb': iptl_tb}
 
     return all_systems
 
@@ -77,7 +123,7 @@ def run_trials(match_fn, spw_1, spw_2, num_trials=int(1e4)):
 
     results = list()
 
-    for i in range(num_trials):
+    for i in tqdm(range(num_trials)):
 
         first_server = np.random.choice([0, 1])
 
@@ -121,7 +167,6 @@ if __name__ == '__main__':
 
     import sys
     import argparse
-    from tqdm import tqdm
 
     systems = get_systems()
 
