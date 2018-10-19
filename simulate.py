@@ -27,6 +27,9 @@ def get_systems():
     final_set_no_tb = lambda win_probs: set_types.play_standard_set(
         win_probs, has_tiebreak=False)
 
+    final_set_tb_at_12 = lambda win_probs: set_types.play_standard_set(
+        win_probs, has_tiebreak=True, num_games_for_tb=12)
+
     final_set_with_tb = lambda win_probs: set_types.play_standard_set(
         win_probs, has_tiebreak=True)
 
@@ -101,8 +104,18 @@ def get_systems():
     iptl_bo5 = lambda spw_1, spw_2: set_types.iptl_best_of(
         set_types.play_iptl_set, [spw_1, spw_2], 5)
 
+    atp_wimbledon_2019 = lambda spw_1, spw_2: set_types.best_of(
+        set_types.play_standard_set, [spw_1, spw_2],
+        5, final_set_fun=final_set_tb_at_12)
+
+    wta_wimbledon_2019 = lambda spw_1, spw_2: set_types.best_of(
+        set_types.play_standard_set, [spw_1, spw_2],
+        3, final_set_fun=final_set_tb_at_12)
+
     all_systems = {'atp_wimbledon': system_4,
+                   'atp_wimbledon_2019': atp_wimbledon_2019,
                    'wta_wimbledon': system_5,
+                   'wta_wimbledon_2019': wta_wimbledon_2019,
                    'atp_us_open': system_6,
                    'wta_us_open': system_7,
                    'doubles': system_9,

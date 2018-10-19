@@ -112,7 +112,11 @@ def iptl_best_of(set_win_fun, p_serve_wins, best_of, final_set_fun=None):
 
 
 def play_standard_set(p_serve_wins, has_tiebreak=True, service_game_ad=True,
-                      num_games_to_win=6, tiebreak_fun=None):
+                      num_games_to_win=6, tiebreak_fun=None,
+                      num_games_for_tb=None):
+
+    if num_games_for_tb is None:
+        num_games_for_tb = num_games_to_win
 
     points_played = 0
     num_changes_ends = 0
@@ -127,7 +131,7 @@ def play_standard_set(p_serve_wins, has_tiebreak=True, service_game_ad=True,
         if np.sum(cur_score) % 2 == 1:
             num_changes_ends += 1
 
-        if all([x == num_games_to_win for x in cur_score]) and has_tiebreak:
+        if all([x == num_games_for_tb for x in cur_score]) and has_tiebreak:
 
             if tiebreak_fun is None:
                 tb_outcome = play_tiebreak(
